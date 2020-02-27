@@ -27,7 +27,7 @@ class gaimr extends Component {
         const proxyurl = "https://cors-anywhere.herokuapp.com/";   
         axios({
             method: 'get',
-            url: proxyurl+'http://gaimr-boot.herokuapp.com/posts/getTrendingPosts?country=',
+            url: proxyurl+'http://gaimr-boot.herokuapp.com/posts/getTrendingPosts?hashtag=&country=',
             headers: {'Content-Type': 'application/json'}
             })
             .then((response) => {
@@ -164,7 +164,7 @@ class gaimr extends Component {
               return(
                 
                 <div>
-                  <div style={{'background-color': '#2f2f4a',padding: '20px 20px 20px 20px','box-shadow': '10px 10px 5px #aaaaaa'}}>{postView}{pollView}</div>
+                  <div style={{padding: '20px 20px 20px 20px','box-shadow': '5px 5px 5px #aaaaaa'}}>{postView}{pollView}</div>
                   </div>
               )
         }

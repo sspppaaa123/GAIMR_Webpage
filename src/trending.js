@@ -6,7 +6,6 @@ import {Card,CardGroup,Carousel,CardDeck,ListGroup,Nav,Navbar,FormControl,Button
 import 'react-animated-slider/build/horizontal.css';
 import HorizontalScroll from 'react-scroll-horizontal'
 
-  
 class trending extends Component { 
     constructor(props) {
         super(props)
@@ -14,9 +13,17 @@ class trending extends Component {
             isLoading: true, item: null, bgcolor: "#ffc1cc", 
             posts:[],
             streams:[],
-            selectedStream:"",
+            countries:[],
+            selectedCountry:'All countries',
+            selectedStream:'',
             progress:0,
+            country_code:'',
+            hashviews:[],
+            hashtags:[]
         }
+        this.handleChange = this.handleChange.bind(this)
+        this.handleChangeStreams = this.handleChangeStreams.bind(this)
+        this.onClick = this.onClick.bind(this)
     }
 
     componentDidMount()
@@ -24,7 +31,7 @@ class trending extends Component {
         const proxyurl = "https://cors-anywhere.herokuapp.com/";   
         axios({
             method: 'get',
-            url: proxyurl+'http://gaimr-boot.herokuapp.com/posts/getTrendingPosts?country=',
+            url: proxyurl+'http://gaimr-boot.herokuapp.com/posts/getTrendingTopics?country='+this.state.country_code+'&stream='+this.state.selectedStream,
             headers: {'Content-Type': 'application/json'}
             })
             .then((response) => {
@@ -37,25 +44,119 @@ class trending extends Component {
             .catch(function (response) {
                 console.log(response);
             });
+        axios({
+            method: 'get',
+            url: proxyurl+'http://gaimr-boot.herokuapp.com/streams',
+            headers: {'Content-Type': 'application/json'}
+            })
+            .then((response) => {
+                    console.log(response.data);
+                    this.setState({
+                        streams: response.data,
+                      }, function () {
+                      });
+            })
+            .catch(function (response) {
+                    console.log(response);
+            });
+
+        axios({
+                method: 'get',
+                url: proxyurl+'http://gaimr-boot.herokuapp.com/posts/getCountries',
+                headers: {'Content-Type': 'application/json'}
+                })
+                    .then((response) => {
+                        console.log(response.data);
+                        this.setState({
+                            countries: response.data,
+                          }, function () {
+                          });
+                    })
+                    .catch(function (response) {
+                        console.log(response);
+                    });
     }
 
+    handleChange(event) {
+        if (event.target.value === "All")
+        this.setState({
+            selectedCountry: event.target.value,
+            country_code : ''
+        });
+
+        else
+        {
+        var record = this.state.countries.filter(function (e) {
+            return e.country == event.target.value;
+        });
+    
+        this.setState({
+            selectedCountry: event.target.value,
+            country_code : record[0].countryCode
+        });
+        }
+      }
+
+
+    handleChangeStreams(event) {
+        if (event.target.value === "All")
+        this.setState({
+            selectedStream : ''
+        });
+
+        else
+        {
+        this.setState({
+            selectedStream :  event.target.value
+        });
+        }
+      }
+
+      setVariables(){
+       
+      }
+
+    
+    onClick(){
+
+        const proxyurl = "https://cors-anywhere.herokuapp.com/";   
+        axios({
+            method: 'get',
+            url: proxyurl+'http://gaimr-boot.herokuapp.com/posts/getTrendingTopics?country='+this.state.country_code+'&stream='+this.state.selectedStream,
+            headers: {'Content-Type': 'application/json'}
+            })
+            .then((response) => {
+                console.log(response.data);
+                this.setState({
+                    posts: response.data,
+                  }, function () {
+                  });
+            })
+            .catch(function (response) {
+                console.log(response);
+            });
+
+        var hashtags =[]
+        var hashviews=[]
+        {this.state.posts.map((item) =>{hashtags.push(item.tagName)});}
+        {hashtags.map((item,i) =>{hashviews.push(<ListGroup.Item style={{borderWidth:2}} key={i}>#{item}</ListGroup.Item>)});}
+        this.state.hashtags=hashtags
+    }
+  
 
     render ()  {
-        let hashtags=[]
-        let hashviews=[]
-        {this.state.posts.map((item) =>
-        {
-            for (let i = 0; i < item.hashtags.length; i++)
-                 hashtags.push(item.hashtags[i])
-        }
-        );
-        }
-        console.log(hashtags)
-        {hashtags.map((item,i) =>
-        {
-            hashviews.push(<ListGroup.Item style={{borderWidth:2}} key={i}>#{item.tagName}</ListGroup.Item>)
-        }
-        );}
+
+        var hashtags =[]
+        var hashviews=[]
+        {this.state.posts.map((item) =>{hashtags.push(item.tagName)});}
+        {hashtags.map((item,i) =>{hashviews.push(<ListGroup.Item style={{borderWidth:2}} key={i}>#{item}</ListGroup.Item>)});}
+
+        let streamOptions = this.state.streams.map((item) =>
+        <option key={item.streamName}>{item.streamName}</option>);
+
+        let countryOptions = this.state.countries.map((item) =>
+        <option key={item.country}>{item.country}</option>);
+
         return ( 
         <html>
             <head>
@@ -65,21 +166,37 @@ class trending extends Component {
                 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous"></link>
             </head>
             <body>
-            <Navbar bg="dark" variant="dark">
-                <Navbar.Brand href="#home">Trending Dashboard</Navbar.Brand>
-                    <Nav className="mr-auto">
-                        <Nav.Link href="#home">Home</Nav.Link>
-                        <Nav.Link href="#posts">Posts</Nav.Link>
-                    </Nav>
-                    <Form inline>
-                            <FormControl type="text" placeholder="Search" className="mr-sm-2" />
-                            <Button variant="outline-info">Search</Button>
-                    </Form>
-            </Navbar>
+                <Navbar bg="dark" variant="dark">
+                    <Navbar.Brand href="#home">Trending Dashboard</Navbar.Brand>
+                        <Nav className="mr-auto">
+                            <Nav.Link href="#home">Home</Nav.Link>
+                            <Nav.Link href="#posts">Posts</Nav.Link>
+                        </Nav>
+                        <Form inline>
+                                <FormControl type="text" placeholder="Search" className="mr-sm-2" />
+                                <Button variant="outline-info">Search</Button>
+                        </Form>
+                </Navbar>
+                <br/>
+
+            
+                <select class="custom-select" value={this.state.value} style={{width:"30%", margin:20}} onChange={this.handleChange.bind(this)}> 
+                <option defaultSelected>Select the Country</option>
+                <option>All</option>
+                    {countryOptions}
+                </select>
+
+                <select class="custom-select" value={this.state.value} style={{width:"30%", margin:20}} onChange={this.handleChangeStreams.bind(this)}>
+                <option defaultSelected>Select the Stream</option>
+                    {streamOptions}
+                </select>
+
+                <button type="button" class="btn btn-primary btn-lg" style={{marginLeft:10}} onClick={this.onClick.bind(this)}>Show Trending</button>
+
 
                 <div style={{margin:30}}>
-                <Card style={{ width: '18rem'}}>
-                    <Card.Header style={{fontWeight:"bold"}}>Trending</Card.Header>
+                <Card style={{ width: '30rem'}}>
+                    <Card.Header style={{fontWeight:"bold"}}>Trending {this.state.selectedStream} in {this.state.selectedCountry}</Card.Header>
                     <ListGroup variant="flush">
                         {hashviews}
                     </ListGroup>
